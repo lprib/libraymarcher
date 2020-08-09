@@ -1,10 +1,10 @@
-mod color;
-mod julia;
-mod quaternion;
-mod ray;
-mod raymarcher;
-mod scene_object;
-mod vec3;
+pub mod color;
+pub mod julia;
+pub mod quaternion;
+pub mod ray;
+pub mod raymarcher;
+pub mod scene_object;
+pub mod vec3;
 
 #[cfg(test)]
 mod tests {

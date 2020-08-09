@@ -66,10 +66,10 @@ impl<C: Color, O: SceneObject<C>> RayMarcher<C, O> {
                     x as f64 + subpixel_x as f64 * subpixel_size,
                     y as f64 + subpixel_y as f64 * subpixel_size,
                 );
-                pixel_sum = pixel_sum.add(self.trace(self.config.camera_pos, ray_dir, t));
+                pixel_sum = pixel_sum + self.trace(self.config.camera_pos, ray_dir, t);
             }
         }
-        pixel_sum.mul(1.0 / (aa_level * aa_level) as f64)
+        pixel_sum * (1.0 / (aa_level * aa_level) as f64)
     }
 
     fn trace(&self, point: Vec3, dir: Vec3, t: f64) -> C {
@@ -97,10 +97,7 @@ impl<C: Color, O: SceneObject<C>> RayMarcher<C, O> {
                 let specular_term = r_dot_v.powf(self.config.specular_shininess);
                 let specular_term = if r_dot_v > 0.0 { specular_term } else { 0.0 };
 
-                self.object
-                    .get_color(t)
-                    .mul(s_dot_n)
-                    .add(self.config.specular_color.mul(specular_term))
+                self.object.get_color(t) * s_dot_n + self.config.specular_color * specular_term
             }
             None => self.config.background_color,
         }

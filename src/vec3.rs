@@ -1,4 +1,4 @@
-use std::ops::{Mul, Neg, Sub, Add};
+use std::ops::{Add, Mul, Neg, Sub};
 // use image::Rgba;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -52,7 +52,11 @@ impl Add<Vec3> for Vec3 {
     type Output = Vec3;
 
     fn add(self, rhs: Vec3) -> Self::Output {
-        Vec3 { x: self.x + rhs.x, y: self.y + rhs.y, z: self.z + rhs.z }
+        Vec3 {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
     }
 }
 
@@ -60,7 +64,11 @@ impl Sub<Vec3> for Vec3 {
     type Output = Vec3;
 
     fn sub(self, rhs: Vec3) -> Self::Output {
-        Vec3 { x: self.x - rhs.x, y: self.y - rhs.y, z: self.z - rhs.z }
+        Vec3 {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
     }
 }
 
@@ -68,7 +76,11 @@ impl Neg for Vec3 {
     type Output = Vec3;
 
     fn neg(self) -> Self::Output {
-        Vec3 { x: -self.x, y: -self.y, z: -self.z }
+        Vec3 {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+        }
     }
 }
 
@@ -76,7 +88,19 @@ impl Mul<Vec3> for f64 {
     type Output = Vec3;
 
     fn mul(self, rhs: Vec3) -> Self::Output {
-        Vec3 { x: self * rhs.x, y: self * rhs.y, z: self * rhs.z }
+        Vec3 {
+            x: self * rhs.x,
+            y: self * rhs.y,
+            z: self * rhs.z,
+        }
+    }
+}
+
+impl Mul<f64> for Vec3 {
+    type Output = Vec3;
+    fn mul(self, rhs: f64) -> Self::Output {
+        // scalar multiply is commutative, use impl above
+        rhs * self
     }
 }
 
@@ -84,13 +108,21 @@ impl Add<f64> for Vec3 {
     type Output = Vec3;
 
     fn add(self, rhs: f64) -> Self::Output {
-        Vec3 { x: self.x + rhs, y: self.y + rhs, z: self.z + rhs }
+        Vec3 {
+            x: self.x + rhs,
+            y: self.y + rhs,
+            z: self.z + rhs,
+        }
     }
 }
 
 impl Default for Vec3 {
     fn default() -> Self {
-        Vec3 { x: 0.0, y: 0.0, z: 0.0 }
+        Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
     }
 }
 
@@ -102,7 +134,11 @@ impl From<(f64, f64, f64)> for Vec3 {
 
 impl From<(i32, i32, i32)> for Vec3 {
     fn from((x, y, z): (i32, i32, i32)) -> Self {
-        Vec3 { x: x as f64, y: y as f64, z: z as f64 }
+        Vec3 {
+            x: x as f64,
+            y: y as f64,
+            z: z as f64,
+        }
     }
 }
 
@@ -125,21 +161,10 @@ impl From<Vec3> for u32 {
             0,
             to_color_byte(vec.x),
             to_color_byte(vec.y),
-            to_color_byte(vec.z)
+            to_color_byte(vec.z),
         ])
     }
 }
-
-// impl From<Vec3> for Rgba<u8> {
-//     fn from(vec: Vec3) -> Self {
-//         Rgba([
-//             to_color_byte(vec.x),
-//             to_color_byte(vec.y),
-//             to_color_byte(vec.z),
-//             0xFF
-//         ])
-//     }
-// }
 
 fn to_color_byte(val: f64) -> u8 {
     let val = clamp(val, 0.0, 1.0);
