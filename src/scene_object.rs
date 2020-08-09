@@ -1,11 +1,11 @@
-use crate::vec3::Vec3;
+use crate::{color::Color, vec3::Vec3};
 
 const NORMAL_EPSILON: f64 = 1E-7;
 
 // t is the varied parameter (slicing in time dimension)
-pub trait SceneObject: Send + Sync {
+pub trait SceneObject<C> {
     fn distance_to(&self, point: Vec3, t: f64) -> f64;
-    fn get_color(&self, t: f64) -> Vec3;
+    fn get_color(&self, t: f64) -> C;
     fn normal(&self, p: Vec3, t: f64) -> Vec3 {
         let x_plus = self.distance_to((p.x + NORMAL_EPSILON, p.y, p.z).into(), t);
         let x_minus = self.distance_to((p.x - NORMAL_EPSILON, p.y, p.z).into(), t);
@@ -25,23 +25,23 @@ pub trait SceneObject: Send + Sync {
     }
 }
 
-pub struct Sphere {
+pub struct Sphere<C> {
     pub center: Vec3,
     pub radius: f64,
-    pub color: Vec3,
+    pub color: C,
 }
 
-impl SceneObject for Sphere {
+impl<C: Color> SceneObject<C> for Sphere<C> {
     fn distance_to(&self, point: Vec3, _: f64) -> f64 {
         let point = Vec3 {
             x: point.x % 5.0,
             y: point.y,
-            z: point.z
+            z: point.z,
         };
         (point - self.center).magnitude() - self.radius
     }
 
-    fn get_color(&self, _: f64) -> Vec3 {
+    fn get_color(&self, _: f64) -> C {
         self.color
     }
 }

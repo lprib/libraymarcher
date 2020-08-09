@@ -1,28 +1,33 @@
 use crate::vec3::Vec3;
-use core::ops::Mul;
-use std::ops::Add;
 
-trait Color {
-    fn mul(self, other: f64) -> Self;
+pub trait Color: Default + Copy + Clone {
+    fn mul(self, scalar: f64) -> Self;
     fn add(self, other: Self) -> Self;
+    fn white() -> Self;
 }
 
 impl Color for Vec3 {
-    fn mul(self, other: f64) -> Self {
-        other * self
+    fn mul(self, scalar: f64) -> Self {
+        scalar * self
     }
 
     fn add(self, other: Self) -> Self {
         self + other
+    }
+    fn white() -> Self {
+        (1, 1, 1).into()
     }
 }
 
 impl Color for f64 {
-    fn mul(self, other: f64) -> Self {
-        self * other
+    fn mul(self, scalar: f64) -> Self {
+        self * scalar
     }
 
     fn add(self, other: Self) -> Self {
         self + other
+    }
+    fn white() -> Self {
+        1.0
     }
 }

@@ -17,7 +17,7 @@ mod tests {
         let w = 200;
         let h = 100;
 
-        let config = RayMarcherConfig {
+        let config: RayMarcherConfig<f64> = RayMarcherConfig {
             width: w,
             height: h,
             camera_zoom: 3.0,
@@ -29,7 +29,7 @@ mod tests {
 
         let obj = julia::Julia {
             c: Quaternion::new(-0.450, -0.447, 0.181, 0.306),
-            color: (1, 0, 0).into(),
+            color: 1.0,
         };
         let march = raymarcher::RayMarcher {
             object: obj,
@@ -40,12 +40,12 @@ mod tests {
         for i in 0..h {
             for j in 0..w {
                 let c = march.get_pixel_color(j, i, 0.0);
-                let gray = if c.x < 0.0 {
+                let gray = if c < 0.0 {
                     0.0
-                } else if c.x > 1.0 {
+                } else if c > 1.0 {
                     1.0
                 } else {
-                    c.x
+                    c
                 };
                 let idx = (gray * (gradient.len() - 1) as f64).floor() as usize;
                 // println!("{}", idx);

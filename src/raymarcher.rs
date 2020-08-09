@@ -1,21 +1,21 @@
-use crate::{ray::cast_ray, scene_object::SceneObject, vec3::Vec3};
+use crate::{color::Color, ray::cast_ray, scene_object::SceneObject, vec3::Vec3};
 
 #[derive(Debug)]
-pub struct RayMarcherConfig {
+pub struct RayMarcherConfig<C> {
     pub width: usize,
     pub height: usize,
     pub camera_pos: Vec3,
     pub look_at: Vec3,
     pub light_pos: Vec3,
-    pub background_color: Vec3,
+    pub background_color: C,
     pub camera_zoom: f64,
     pub anti_aliasing_level: u32,
     pub backplane_positions: Vec3,
     pub specular_shininess: f64,
-    pub specular_color: Vec3,
+    pub specular_color: C,
 }
 
-impl Default for RayMarcherConfig {
+impl<C: Color> Default for RayMarcherConfig<C> {
     fn default() -> Self {
         RayMarcherConfig {
             width: 10,
@@ -35,11 +35,7 @@ impl Default for RayMarcherConfig {
                 y: 4.0,
                 z: 4.0,
             },
-            background_color: Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
+            background_color: C::default(),
             camera_zoom: 3.0,
             anti_aliasing_level: 4u32,
             backplane_positions: Vec3 {
@@ -48,39 +44,35 @@ impl Default for RayMarcherConfig {
                 z: 3.0,
             },
             specular_shininess: 50.0,
-            specular_color: Vec3 {
-                x: 1.0,
-                y: 1.0,
-                z: 1.0,
-            },
+            specular_color: C::white(),
         }
     }
 }
 
-pub struct RayMarcher<O: SceneObject> {
+pub struct RayMarcher<C, O: SceneObject<C>> {
     pub object: O,
-    pub config: RayMarcherConfig,
+    pub config: RayMarcherConfig<C>,
 }
 
-impl<O: SceneObject> RayMarcher<O> {
-    pub fn get_pixel_color(&self, x: usize, y: usize, t: f64) -> Vec3 {
+impl<C: Color, O: SceneObject<C>> RayMarcher<C, O> {
+    pub fn get_pixel_color(&self, x: usize, y: usize, t: f64) -> C {
         let aa_level = self.config.anti_aliasing_level;
 
         let subpixel_size = 1.0 / aa_level as f64;
-        let mut pixel_sum = Vec3::default();
+        let mut pixel_sum = C::default();
         for subpixel_x in 0..aa_level {
             for subpixel_y in 0..aa_level {
                 let ray_dir = self.camera_ray_direction(
                     x as f64 + subpixel_x as f64 * subpixel_size,
                     y as f64 + subpixel_y as f64 * subpixel_size,
                 );
-                pixel_sum = pixel_sum + self.trace(self.config.camera_pos, ray_dir, t);
+                pixel_sum = pixel_sum.add(self.trace(self.config.camera_pos, ray_dir, t));
             }
         }
-        (1.0 / (aa_level * aa_level) as f64) * pixel_sum
+        pixel_sum.mul(1.0 / (aa_level * aa_level) as f64)
     }
 
-    fn trace(&self, point: Vec3, dir: Vec3, t: f64) -> Vec3 {
+    fn trace(&self, point: Vec3, dir: Vec3, t: f64) -> C {
         let res = cast_ray(&self.object, point, dir, self.config.backplane_positions, t);
         //TODO unsure if this is necessary:
         let normal_backoff_dist = 1E-7;
@@ -105,7 +97,10 @@ impl<O: SceneObject> RayMarcher<O> {
                 let specular_term = r_dot_v.powf(self.config.specular_shininess);
                 let specular_term = if r_dot_v > 0.0 { specular_term } else { 0.0 };
 
-                s_dot_n * self.object.get_color(t) + specular_term * self.config.specular_color
+                self.object
+                    .get_color(t)
+                    .mul(s_dot_n)
+                    .add(self.config.specular_color.mul(specular_term))
             }
             None => self.config.background_color,
         }

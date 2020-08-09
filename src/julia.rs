@@ -1,13 +1,13 @@
-use crate::{quaternion::Quaternion, scene_object::SceneObject, vec3::Vec3};
+use crate::{color::Color, quaternion::Quaternion, scene_object::SceneObject, vec3::Vec3};
 
 const MAX_ITERS: i32 = 20;
 
-pub struct Julia {
+pub struct Julia<C> {
     pub c: Quaternion,
-    pub color: Vec3,
+    pub color: C,
 }
 
-impl SceneObject for Julia {
+impl<C: Color> SceneObject<C> for Julia<C> {
     fn distance_to(&self, point: Vec3, t: f64) -> f64 {
         let mut z = Quaternion::new(point.x, point.y, point.z, t);
         let mut dz = Quaternion::new(1.0, 0.0, 0.0, 0.0);
@@ -28,7 +28,7 @@ impl SceneObject for Julia {
         dist * 0.2
     }
 
-    fn get_color(&self, t: f64) -> Vec3 {
+    fn get_color(&self, t: f64) -> C {
         self.color
     }
 }
