@@ -14,7 +14,12 @@ mod tests {
 
     #[test]
     fn test_output() {
+        let w = 200;
+        let h = 100;
+
         let config = RayMarcherConfig {
+            width: w,
+            height: h,
             camera_zoom: 3.0,
             anti_aliasing_level: 2,
             camera_pos: (2.0, 2.5, 2.5).into(),
@@ -30,14 +35,11 @@ mod tests {
             object: obj,
             config: config,
         };
-
-        let w = 200;
-        let h = 100;
         let gradient = " .:-=+*#%@";
 
         for i in 0..h {
             for j in 0..w {
-                let c = march.get_pixel_color((j, i), (w, h), 0.0);
+                let c = march.get_pixel_color(j, i, 0.0);
                 let gray = if c.x < 0.0 {
                     0.0
                 } else if c.x > 1.0 {

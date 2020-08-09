@@ -1,4 +1,61 @@
-use crate::{scene_object::SceneObject, vec3::Vec3, ray::cast_ray};
+use crate::{ray::cast_ray, scene_object::SceneObject, vec3::Vec3};
+
+#[derive(Debug)]
+pub struct RayMarcherConfig {
+    pub width: usize,
+    pub height: usize,
+    pub camera_pos: Vec3,
+    pub look_at: Vec3,
+    pub light_pos: Vec3,
+    pub background_color: Vec3,
+    pub camera_zoom: f64,
+    pub anti_aliasing_level: u32,
+    pub backplane_positions: Vec3,
+    pub specular_shininess: f64,
+    pub specular_color: Vec3,
+}
+
+impl Default for RayMarcherConfig {
+    fn default() -> Self {
+        RayMarcherConfig {
+            width: 10,
+            height: 10,
+            camera_pos: Vec3 {
+                x: 2.0,
+                y: 4.0,
+                z: 4.0,
+            },
+            look_at: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            light_pos: Vec3 {
+                x: 2.0,
+                y: 4.0,
+                z: 4.0,
+            },
+            background_color: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+            camera_zoom: 3.0,
+            anti_aliasing_level: 4u32,
+            backplane_positions: Vec3 {
+                x: 3.0,
+                y: 3.0,
+                z: 3.0,
+            },
+            specular_shininess: 50.0,
+            specular_color: Vec3 {
+                x: 1.0,
+                y: 1.0,
+                z: 1.0,
+            },
+        }
+    }
+}
 
 pub struct RayMarcher<O: SceneObject> {
     pub object: O,
@@ -6,20 +63,16 @@ pub struct RayMarcher<O: SceneObject> {
 }
 
 impl<O: SceneObject> RayMarcher<O> {
-    pub fn get_pixel_color(&self, (x, y): (usize, usize), (width, height): (usize, usize), t: f64) -> Vec3 {
+    pub fn get_pixel_color(&self, x: usize, y: usize, t: f64) -> Vec3 {
         let aa_level = self.config.anti_aliasing_level;
 
         let subpixel_size = 1.0 / aa_level as f64;
         let mut pixel_sum = Vec3::default();
         for subpixel_x in 0..aa_level {
             for subpixel_y in 0..aa_level {
-                let ray_dir = Self::camera_ray_direction(
+                let ray_dir = self.camera_ray_direction(
                     x as f64 + subpixel_x as f64 * subpixel_size,
                     y as f64 + subpixel_y as f64 * subpixel_size,
-                    self.config.camera_pos,
-                    self.config.look_at,
-                    self.config.camera_zoom,
-                    (width, height),
                 );
                 pixel_sum = pixel_sum + self.trace(self.config.camera_pos, ray_dir, t);
             }
@@ -54,50 +107,21 @@ impl<O: SceneObject> RayMarcher<O> {
 
                 s_dot_n * self.object.get_color(t) + specular_term * self.config.specular_color
             }
-            None => self.config.background_color
+            None => self.config.background_color,
         }
     }
 
-    fn camera_ray_direction(x: f64, y: f64, cam_pos: Vec3, look_at: Vec3, zoom: f64, (width, height): (usize, usize)) -> Vec3 {
-        let u = -(x as f64 / width as f64 * 2.0 - 1.0);
-        let v = y as f64 / height as f64 * 2.0 - 1.0;
+    fn camera_ray_direction(&self, x: f64, y: f64) -> Vec3 {
+        let u = -(x as f64 / self.config.width as f64 * 2.0 - 1.0);
+        let v = y as f64 / self.config.height as f64 * 2.0 - 1.0;
 
-        let look_dir = (look_at - cam_pos).normalized();
+        let look_dir = (self.config.look_at - self.config.camera_pos).normalized();
         let right_vec = Vec3::from((0, -1, 0)).cross(look_dir).normalized();
         let down_vec = look_dir.cross(right_vec).normalized();
 
-        let zoomed_cam_pos = cam_pos + zoom * look_dir;
+        let zoomed_cam_pos = self.config.camera_pos + self.config.camera_zoom * look_dir;
         let pix_pos = zoomed_cam_pos + u * right_vec + v * down_vec;
-        let dir = pix_pos - cam_pos;
+        let dir = pix_pos - self.config.camera_pos;
         dir.normalized()
-    }
-}
-
-#[derive(Debug)]
-pub struct RayMarcherConfig {
-    pub camera_pos: Vec3,
-    pub look_at: Vec3,
-    pub light_pos: Vec3,
-    pub background_color: Vec3,
-    pub camera_zoom: f64,
-    pub anti_aliasing_level: u32,
-    pub backplane_positions: Vec3,
-    pub specular_shininess: f64,
-    pub specular_color: Vec3,
-}
-
-impl Default for RayMarcherConfig {
-    fn default() -> Self {
-        RayMarcherConfig {
-            camera_pos: Vec3 { x: 2.0, y: 4.0, z: 4.0 },
-            look_at: Vec3 { x: 0.0, y: 0.0, z: 0.0 },
-            light_pos: Vec3 { x: 2.0, y: 4.0, z: 4.0 },
-            background_color: Vec3 { x: 0.0, y: 0.0, z: 0.0 },
-            camera_zoom: 3.0,
-            anti_aliasing_level: 4u32,
-            backplane_positions: Vec3 { x: 3.0, y: 3.0, z: 3.0 },
-            specular_shininess: 50.0,
-            specular_color: Vec3 { x: 1.0, y: 1.0, z: 1.0 },
-        }
     }
 }
