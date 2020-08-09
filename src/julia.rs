@@ -1,20 +1,16 @@
-use cgmath::{Quaternion, InnerSpace, Zero, One};
-use crate::{vec3::Vec3, scene_object::SceneObject};
-
-type Quaternion64 = Quaternion<f64>;
-
+use crate::{quaternion::Quaternion, scene_object::SceneObject, vec3::Vec3};
 
 const MAX_ITERS: i32 = 20;
 
 pub struct Julia {
-    pub c: Quaternion64,
+    pub c: Quaternion,
     pub color: Vec3,
 }
 
 impl SceneObject for Julia {
     fn distance_to(&self, point: Vec3, t: f64) -> f64 {
-        let mut z = Quaternion64::new(point.x, point.y, point.z, t);
-        let mut dz = Quaternion64::new(1.0, 0.0, 0.0, 0.0);
+        let mut z = Quaternion::new(point.x, point.y, point.z, t);
+        let mut dz = Quaternion::new(1.0, 0.0, 0.0, 0.0);
         let mut count = 0;
 
         while count < MAX_ITERS {

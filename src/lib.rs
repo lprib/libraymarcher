@@ -1,5 +1,6 @@
 mod color;
 mod julia;
+mod quaternion;
 mod ray;
 mod raymarcher;
 mod scene_object;
@@ -8,7 +9,7 @@ mod vec3;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cgmath::Quaternion;
+    use quaternion::Quaternion;
     use raymarcher::RayMarcherConfig;
 
     #[test]
