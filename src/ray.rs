@@ -6,10 +6,25 @@ const HIT_THRESHOLD: f64 = 1E-4;
 
 #[derive(Debug)]
 pub struct RayResult {
+    /// Length in units of the ray
     pub len: f64,
+    /// Where the ray intersected the scene in space
     pub hit_point: Vec3,
 }
 
+/// Performs the raymarching algorithm on a scene.
+///
+/// # Arguments
+/// * `object`: the object/scene to calculate ray intersection with
+/// * `point`: the origin point of this ray
+/// * `direction`: direction vector of this ray. This does not need to be normalized.
+/// * `backplanes`: if the ray ever reaches outside of the cube bounded by +/- backplanes,
+/// it will be assumed to be a miss. This is a sort of culling mechanism.
+/// * `t`: the 4th dimension (or other varied value) to pass to the object for animation purposes.
+///
+/// # Returns
+/// `Some(result)` if the ray hit an object in the scene
+/// `None` if the ray did not hit anything or hit one of the backplanes
 pub fn cast_ray<C: Color, O: SceneObject<C>>(
     object: &O,
     point: Vec3,

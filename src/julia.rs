@@ -1,7 +1,10 @@
 use crate::{color::Color, quaternion::Quaternion, scene_object::SceneObject, vec3::Vec3};
 
+/// The maximum number of escape iterations that are used for each distance estimation
 const MAX_ITERS: i32 = 20;
 
+/// A Julia set defined by a Quaternion c value (used in z = z^2 + c)
+/// Includes a color, which is passed through to the raymarcher
 pub struct Julia<C> {
     pub c: Quaternion,
     pub color: C,

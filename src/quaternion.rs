@@ -1,6 +1,7 @@
 use crate::vec3::Vec3;
 use std::ops::{Add, Mul};
 
+/// Quaternion type, a 4 dimensional number type.
 #[derive(Copy, Clone, Debug)]
 pub struct Quaternion {
     s: f64,

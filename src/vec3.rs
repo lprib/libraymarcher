@@ -1,6 +1,6 @@
 use std::ops::{Add, Mul, Neg, Sub};
-// use image::Rgba;
 
+/// A 3 dimensional vector of `f64`
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Vec3 {
     pub x: f64,
@@ -9,23 +9,30 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
+    /// The Euclidean norm
     pub fn magnitude(self) -> f64 {
         self.dot(self).sqrt()
     }
 
+    /// Dot product with another Vec3
     pub fn dot(self, other: Vec3) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
 
+    /// Normalize this Vec3 so that it has a magnitude of 1
+    ///
+    /// Will panic with a div by zero if the self.magnitude() is zero
     pub fn normalized(self) -> Self {
         (1.0 / self.magnitude()) * self
     }
 
+    /// Reflect this vector about a normal vec.
     pub fn reflect(self, norm: Vec3) -> Self {
         let norm = norm.normalized();
         self - 2.0 * self.dot(norm) * norm
     }
 
+    /// Cross product with another Vec3
     pub fn cross(self, other: Vec3) -> Self {
         Self {
             x: self.y * other.z - self.z * other.y,
@@ -34,6 +41,9 @@ impl Vec3 {
         }
     }
 
+    /// Simulate Snell's law refrection through a surface with normal vec.
+    ///
+    /// eta is the relative index of refraction, ri1 / ri2
     pub fn refract(self, norm: Vec3, eta: f64) -> Self {
         let k = 1.0 - eta * eta * (1.0 - self.dot(norm) * self.dot(norm));
         if k < 0.0 {
@@ -43,6 +53,7 @@ impl Vec3 {
         }
     }
 
+    /// Linearly interpolate between two Vec3 with an interpolation value `t`
     pub fn lerp(self, other: Vec3, t: f64) -> Self {
         self + t * (other - self)
     }

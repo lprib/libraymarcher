@@ -2,16 +2,27 @@ use crate::{color::Color, ray::cast_ray, scene_object::SceneObject, vec3::Vec3};
 
 #[derive(Debug)]
 pub struct RayMarcherConfig<C> {
+    /// Width of the rendered image in px
     pub width: usize,
+    /// Height of the rendered image in px
     pub height: usize,
+    /// Camera position in 3d space
     pub camera_pos: Vec3,
+    /// Point that the camera should point towards (usually leave this at (0, 0, 0) for julia sets)
     pub look_at: Vec3,
+    /// Position of the Phong directional light in 3d space
     pub light_pos: Vec3,
+    /// Color to render if a ray missed the scene
     pub background_color: C,
+    /// Zoom level of the camera. 1.0 normal zoom
     pub camera_zoom: f64,
+    /// Size of subpixel grid. anti_aliasing_level of 4 will create a 4x4 subpixel grid (so 16x AA)
     pub anti_aliasing_level: u32,
+    /// Position of the back culling planes. Any rays that hit this will be assumed to be a miss
     pub backplane_positions: Vec3,
+    /// Phong shininess constant
     pub specular_shininess: f64,
+    /// Color of specular highlights
     pub specular_color: C,
 }
 
@@ -50,11 +61,21 @@ impl<C: Color> Default for RayMarcherConfig<C> {
 }
 
 pub struct RayMarcher<C, O: SceneObject<C>> {
+    /// Object or scene to render
     pub object: O,
+    /// Configuration to run under. see `RayMarcherConfig`
     pub config: RayMarcherConfig<C>,
 }
 
 impl<C: Color, O: SceneObject<C>> RayMarcher<C, O> {
+    /// Marches a ray (and secondary rays) to get a final color.
+    /// Will send multiple rays if anti-aliasing is enabled, and average them.
+    ///
+    /// `x` and `y` are the pixel locations. They must be with the width and height of the configuration.
+    ///
+    /// `t` is the varied parameter, used for animation.
+    ///
+    /// Returns the traced color of the pixel.
     pub fn get_pixel_color(&self, x: usize, y: usize, t: f64) -> C {
         let aa_level = self.config.anti_aliasing_level;
 
@@ -66,13 +87,15 @@ impl<C: Color, O: SceneObject<C>> RayMarcher<C, O> {
                     x as f64 + subpixel_x as f64 * subpixel_size,
                     y as f64 + subpixel_y as f64 * subpixel_size,
                 );
-                pixel_sum = pixel_sum + self.trace(self.config.camera_pos, ray_dir, t);
+                pixel_sum =
+                    pixel_sum + self.trace_with_lighting(self.config.camera_pos, ray_dir, t);
             }
         }
         pixel_sum * (1.0 / (aa_level * aa_level) as f64)
     }
 
-    fn trace(&self, point: Vec3, dir: Vec3, t: f64) -> C {
+    /// Trace a ray with point and direction, calculate lighting for this ray, and return the color.
+    fn trace_with_lighting(&self, point: Vec3, dir: Vec3, t: f64) -> C {
         let res = cast_ray(&self.object, point, dir, self.config.backplane_positions, t);
         //TODO unsure if this is necessary:
         let normal_backoff_dist = 1E-7;
@@ -103,6 +126,8 @@ impl<C: Color, O: SceneObject<C>> RayMarcher<C, O> {
         }
     }
 
+    /// Given a pixel x and y, calculate the direction of the needed ray.
+    /// Takes camera position, zoom, and look_at from the configuration in to account.
     fn camera_ray_direction(&self, x: f64, y: f64) -> Vec3 {
         let u = -(x as f64 / self.config.width as f64 * 2.0 - 1.0);
         let v = y as f64 / self.config.height as f64 * 2.0 - 1.0;
